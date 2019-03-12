@@ -1,9 +1,11 @@
-import express, { Request, Response, NextFunction } from 'express'
 import bodyParser from 'body-parser'
+import express, { NextFunction, Request, Response } from 'express'
 import methodOverride from 'method-override'
 
 import routes from 'routes'
 
+import { s3 } from 'functions/files'
+import { serverStartingHealthCheck } from 'utils'
 import logger from 'utils/logger'
 
 const app = express()
@@ -29,9 +31,17 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
-app.listen(process.env.PORT, () =>
-  logger.info('Server has started with %o', {
-    port: process.env.PORT,
-    env: process.env.NODE_ENV,
-  }),
-)
+serverStartingHealthCheck()
+  .then(() => {
+    app.listen(process.env.PORT, () =>
+      logger.info('Server has started with %o', {
+        port: process.env.PORT,
+        env: process.env.NODE_ENV,
+      }),
+    )
+  })
+  .catch(e => {
+    logger.error('Server health check failed')
+
+    process.exit(0)
+  })

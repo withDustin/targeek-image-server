@@ -3,6 +3,7 @@ import fs from 'fs'
 import {
   fileExists,
   getFileChecksum,
+  getFileLocation,
   removeFile,
   renameFile,
 } from 'functions/files'
@@ -31,12 +32,14 @@ export const multer = multerMiddleware({
   },
 }).any()
 
-export const renameFilesToChecksum: RequestHandler = (req, res, next) => {
-  const nextFiles = (req.files as Express.Multer.File[]).map(
-    (file: Express.Multer.File) => {
+export const renameFilesToChecksum: RequestHandler = async (req, res, next) => {
+  const files = req.files as Express.Multer.File[]
+  const nextFiles = await Promise.all(
+    files.map(async (file: Express.Multer.File) => {
       const checksum = getFileChecksum(file.path)
 
-      const isFileExisted = fileExists(checksum)
+      const existingFileLocation = await getFileLocation(checksum)
+      const isFileExisted = existingFileLocation !== 'not_exist'
 
       if (isFileExisted) {
         removeFile(file.filename)
@@ -48,7 +51,7 @@ export const renameFilesToChecksum: RequestHandler = (req, res, next) => {
 
       file.filename = checksum
       return file
-    },
+    }),
   )
 
   req.files = nextFiles

@@ -1,5 +1,5 @@
 import express from 'express'
-import { getFilePath, readFileBuffer } from 'functions/files'
+import { readFileBuffer } from 'functions/files'
 import { optimize } from 'functions/images'
 import { multer, renameFilesToChecksum } from 'middlewares/files'
 
@@ -9,10 +9,17 @@ router.put('/image', multer, renameFilesToChecksum, (req, res) => {
   res.send(req.files)
 })
 
-router.get('/:fileName', async (req, res) => {
+router.get('/:fileName', async (req, res, next) => {
   try {
     const fileName: string = req.params.fileName
-    const fileBuffer = readFileBuffer(fileName)
+    const fileBuffer = await readFileBuffer(fileName)
+
+    if (!fileBuffer) {
+      return res.status(404).send({
+        code: 404,
+        message: 'File not found',
+      })
+    }
 
     const optimizedFile = optimize(fileBuffer, req.query)
 

@@ -9,8 +9,10 @@
     "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly -r tsconfig-paths/register -r ./dotenv src/index.ts"
   },
   "dependencies": {
+    "aws-sdk": "^2.419.0",
     "body-parser": "^1.18.3",
     "express": "^4.16.4",
+    "file-type": "^10.9.0",
     "md5-file": "^4.0.0",
     "method-override": "^3.0.0",
     "multer": "^1.4.1",
