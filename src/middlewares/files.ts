@@ -4,11 +4,14 @@ import {
   fileExists,
   getFileChecksum,
   getFileLocation,
+  getFilePath,
   removeFile,
   renameFile,
 } from 'functions/files'
 import multerMiddleware from 'multer'
 import path from 'path'
+import sharp = require('sharp')
+import logger from 'utils/logger'
 
 const storage = multerMiddleware.diskStorage({
   destination: (req, file, cb) => {
@@ -44,16 +47,45 @@ export const renameFilesToChecksum: RequestHandler = async (req, res, next) => {
       if (isFileExisted) {
         removeFile(file.filename)
         file.filename = checksum
-        return file
+        return {
+          ...file,
+          location: existingFileLocation,
+        }
       }
 
       renameFile(file.filename, checksum)
 
       file.filename = checksum
-      return file
+
+      return {
+        ...file,
+        location: existingFileLocation,
+      }
     }),
   )
 
   req.files = nextFiles
+  next()
+}
+
+export const convertImagesToWebP: RequestHandler = async (req, res, next) => {
+  const files = req.files as Array<
+    Express.Multer.File & {
+      location: 's3' | 'local' | 'not_exist'
+    }
+  >
+
+  files.forEach(async file => {
+    if (file.location === 'not_exist' && file.mimetype.startsWith('image/')) {
+      const filePath = getFilePath(file.filename)
+      const optimizedImageBuffer = await sharp(filePath)
+        .webp()
+        .toBuffer()
+
+      fs.writeFileSync(filePath, optimizedImageBuffer)
+      logger.debug('Converted image %s to webp', filePath)
+    }
+  })
+
   next()
 }

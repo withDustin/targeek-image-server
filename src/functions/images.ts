@@ -14,14 +14,14 @@ export interface ImageOptimizeOptions {
   quality?: number
 }
 
-export const optimize = (buffer: Buffer, options: ImageOptimizeOptions) => {
+export const processImage = (buffer: Buffer, options: ImageOptimizeOptions) => {
   const image = sharp(buffer).webp({ quality: +options.quality || 60 })
 
   if (options.size === 'original') {
     return image
   }
 
-  const width = options.width || SIZES[options.size]
+  const width = options.width || SIZES[options.size || 'large']
 
   return image.resize(null, null, {
     width,
