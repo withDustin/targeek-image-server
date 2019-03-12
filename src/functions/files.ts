@@ -1,4 +1,5 @@
 import S3 from 'aws-sdk/clients/s3'
+import getFileType from 'file-type'
 import fs from 'fs'
 import md5File from 'md5-file'
 import path from 'path'
@@ -80,5 +81,15 @@ export const uploadFileToS3 = async (fileName: string) => {
 
   const fileBuffer = fs.readFileSync(getFilePath(fileName))
 
-  return s3.putObject({ Bucket, Key: fileName, Body: fileBuffer })
+  return s3.putObject({ Bucket, Key: fileName, Body: fileBuffer }).promise()
+}
+
+export const getFileMimeType = async (fileName: string) => {
+  const fileBuffer = await readFileBuffer(fileName)
+
+  if (!fileBuffer) {
+    return null
+  }
+
+  return await getFileType(fileBuffer)
 }

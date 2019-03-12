@@ -2,7 +2,7 @@ import express from 'express'
 import { readFileBuffer } from 'functions/files'
 import { processImage } from 'functions/images'
 import {
-  convertImagesToWebP,
+  filesProcessing,
   multer,
   renameFilesToChecksum,
 } from 'middlewares/files'
@@ -13,7 +13,7 @@ router.put(
   '/image',
   multer,
   renameFilesToChecksum,
-  convertImagesToWebP,
+  filesProcessing,
   (req, res) => {
     res.send(req.files)
   },

@@ -8,6 +8,7 @@ import {
   removeFile,
   renameFile,
 } from 'functions/files'
+import imageQueue from 'jobs/image-processor'
 import multerMiddleware from 'multer'
 import path from 'path'
 import sharp = require('sharp')
@@ -68,7 +69,7 @@ export const renameFilesToChecksum: RequestHandler = async (req, res, next) => {
   next()
 }
 
-export const convertImagesToWebP: RequestHandler = async (req, res, next) => {
+export const filesProcessing: RequestHandler = async (req, res, next) => {
   const files = req.files as Array<
     Express.Multer.File & {
       location: 's3' | 'local' | 'not_exist'
@@ -76,14 +77,8 @@ export const convertImagesToWebP: RequestHandler = async (req, res, next) => {
   >
 
   files.forEach(async file => {
-    if (file.location === 'not_exist' && file.mimetype.startsWith('image/')) {
-      const filePath = getFilePath(file.filename)
-      const optimizedImageBuffer = await sharp(filePath)
-        .webp()
-        .toBuffer()
-
-      fs.writeFileSync(filePath, optimizedImageBuffer)
-      logger.debug('Converted image %s to webp', filePath)
+    if (file.mimetype.startsWith('image/')) {
+      await imageQueue.add(file)
     }
   })
 
