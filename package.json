@@ -1,0 +1,21 @@
+{
+  "name": "targeek-image-server",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "repository": "git@github.com:targeek/targeek-image-server.git",
+  "author": "Dương Đỗ <dustin.do95@gmail.com>",
+  "license": "MIT",
+  "scripts": {
+    "start": "NODE_ENV=development ts-node -r tsconfig-paths/register -r ./dotenv src/index.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^11.11.1",
+    "dotenv": "^6.2.0",
+    "prettier": "^1.16.4",
+    "ts-node": "^8.0.3",
+    "tsconfig-paths": "^3.8.0",
+    "tslint": "^5.13.1",
+    "tslint-config-prettier": "^1.18.0",
+    "typescript": "^3.3.3333"
+  }
+}
