@@ -11,7 +11,17 @@ import {
 import sharp = require('sharp')
 import logger from 'utils/logger'
 
-const imageQueue = new Queue('image-processing')
+export const imageQueue = new Queue('image-processing', {
+  defaultJobOptions: {
+    backoff: {
+      type: 'fixed',
+      delay: 5000,
+    },
+  },
+})
+export const imageHealthCheckQueue = new Queue('image-health-check', {
+  defaultJobOptions: { delay: 20000 },
+})
 
 imageQueue.process(async (job, done) => {
   const imageName = job.data.filename
@@ -29,6 +39,7 @@ imageQueue.process(async (job, done) => {
   job.progress(20)
 
   if (
+    fileMimeType &&
     !(
       !fileMimeType.mime.startsWith('image') ||
       fileMimeType.mime === 'image/webp'
@@ -53,8 +64,21 @@ imageQueue.process(async (job, done) => {
   done()
 })
 
-imageQueue.on('completed', job =>
-  logger.info(`[${job.data.filename}] Processing completed`),
-)
+imageQueue.on('completed', async job => {
+  logger.info(`[${job.data.filename}] Processing completed`)
+})
+imageQueue.on('error', error => {
+  logger.error(`[${error.name}]: ${error.message} %o`, error.stack)
+})
+
+imageHealthCheckQueue.process('clean-uploads-dir', async (job, done) => {
+  const pendingFiles = fs.readdirSync(process.env.UPLOAD_DIR)
+
+  pendingFiles
+    .filter(file => file !== '.DS_Store')
+    .forEach(filename => imageQueue.add({ filename }))
+
+  setTimeout(done, 5000)
+})
 
 export default imageQueue

@@ -1,7 +1,7 @@
 import winston from 'winston'
 
 const logger = winston.createLogger({
-  level: 'info',
+  level: 'verbose',
   format: winston.format.combine(winston.format.splat(), winston.format.json()),
   transports: [
     //

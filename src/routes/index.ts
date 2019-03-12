@@ -1,4 +1,5 @@
 import express from 'express'
+import fileType from 'file-type'
 import { readFileBuffer } from 'functions/files'
 import { processImage } from 'functions/images'
 import {
@@ -6,6 +7,7 @@ import {
   multer,
   renameFilesToChecksum,
 } from 'middlewares/files'
+import logger from 'utils/logger'
 
 const router = express.Router()
 
@@ -15,6 +17,7 @@ router.put(
   renameFilesToChecksum,
   filesProcessing,
   (req, res) => {
+    // logger.verbose('uploaded %o', req.files)
     res.send(req.files)
   },
 )
@@ -31,12 +34,16 @@ router.get('/:fileName', async (req, res, next) => {
       })
     }
 
-    const optimizedFile = processImage(fileBuffer, req.query)
+    const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
+      ? (await processImage(fileBuffer, req.query)).toBuffer()
+      : fileBuffer
+
+    logger.verbose('Downloaded file %s', fileName)
 
     res
       .header('Cache-Control', 'public, max-age=31536000')
       .contentType('image/*')
-      .send(await optimizedFile.toBuffer())
+      .send(optimizedFileBuffer)
   } catch (err) {
     throw err
   }
