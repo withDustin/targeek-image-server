@@ -1,5 +1,4 @@
 const dotenv = require('dotenv')
-const version = require('./package.json').version
 
 function dotenvSetup() {
   const ENV = process.env.NODE_ENV
@@ -9,8 +8,8 @@ function dotenvSetup() {
 
   dotenv.config({ path: '.env.local' })
   dotenv.config({ path: '.env' })
-
-  process.env.SERVER_VERSION = version
 }
+
+dotenvSetup()
 
 module.exports = dotenvSetup
