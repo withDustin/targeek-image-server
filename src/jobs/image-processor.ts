@@ -11,7 +11,7 @@ import {
 import sharp = require('sharp')
 import logger from 'utils/logger'
 
-export const imageQueue = new Queue('image-processing', {
+export const imageQueue = new Queue('image-processing', process.env.REDIS_URI, {
   defaultJobOptions: {
     backoff: {
       type: 'fixed',
@@ -19,9 +19,13 @@ export const imageQueue = new Queue('image-processing', {
     },
   },
 })
-export const imageHealthCheckQueue = new Queue('image-health-check', {
-  defaultJobOptions: { delay: 20000 },
-})
+export const imageHealthCheckQueue = new Queue(
+  'image-health-check',
+  process.env.REDIS_URI,
+  {
+    defaultJobOptions: { delay: 20000 },
+  },
+)
 
 imageQueue.process(async (job, done) => {
   const imageName = job.data.filename
