@@ -6,6 +6,7 @@ import routes from 'routes'
 
 import { s3 } from 'functions/files'
 import imageQueue, { imageHealthCheckQueue } from 'jobs/image-processor'
+import arenaMiddleware from 'middlewares/arena'
 import { serverStartingHealthCheck } from 'utils'
 import logger from 'utils/logger'
 
@@ -14,6 +15,8 @@ const app = express()
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(methodOverride())
+
+app.use('/', arenaMiddleware)
 
 app.all('*', routes)
 

@@ -21,3 +21,4 @@ declare namespace NodeJS {
     REDIS_URI: string
   }
 }
+declare module 'bull-arena'

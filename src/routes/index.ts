@@ -17,7 +17,7 @@ router.put(
   renameFilesToChecksum,
   filesProcessing,
   (req, res) => {
-    // logger.verbose('uploaded %o', req.files)
+    logger.verbose('uploaded %o', req.files)
     res.send(req.files)
   },
 )
@@ -35,16 +35,17 @@ router.get('/:fileName', async (req, res, next) => {
     }
 
     const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
-      ? (await processImage(fileBuffer, req.query)).toBuffer()
+      ? await (await processImage(fileBuffer, req.query)).toBuffer()
       : fileBuffer
 
-    logger.verbose('Downloaded file %s', fileName)
+    logger.verbose('Downloaded file %s %s', fileName, fileType(fileBuffer).mime)
 
     res
       .header('Cache-Control', 'public, max-age=31536000')
-      .contentType('image/*')
+      .contentType(fileType(optimizedFileBuffer).mime)
       .send(optimizedFileBuffer)
   } catch (err) {
+    logger.error(err)
     throw err
   }
 })
