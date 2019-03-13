@@ -1,7 +1,13 @@
+import fs from 'fs'
 import { s3 } from 'functions/files'
 import logger from './logger'
 
 export const serverStartingHealthCheck = async () => {
+  if (!(process.env.UPLOAD_DIR && fs.existsSync(process.env.UPLOAD_DIR))) {
+    logger.error('process.env.UPLOAD_DIR is not valid.')
+    throw new Error('process.env.UPLOAD_DIR is not valid.')
+  }
+
   return s3
     .headBucket({ Bucket: process.env.AWS_S3_BUCKET })
     .promise()

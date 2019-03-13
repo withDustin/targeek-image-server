@@ -44,6 +44,9 @@ export const fileExists = async (fileName: string) => {
 }
 
 export const removeFile = (fileName: string) => {
+  if (!fs.existsSync(getFilePath(fileName))) {
+    return
+  }
   return fs.unlinkSync(getFilePath(fileName))
 }
 

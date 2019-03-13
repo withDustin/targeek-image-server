@@ -24,6 +24,10 @@ export const imageHealthCheckQueue = new Queue(
   process.env.REDIS_URI,
   {
     defaultJobOptions: { delay: 20000 },
+    limiter: {
+      max: 1,
+      duration: 10000,
+    },
   },
 )
 
@@ -35,6 +39,7 @@ imageQueue.process(async (job, done) => {
   job.progress(10)
 
   if (imageLocation !== 'local') {
+    removeFile(imageName)
     return done()
   }
 
@@ -76,13 +81,27 @@ imageQueue.on('error', error => {
 })
 
 imageHealthCheckQueue.process('clean-uploads-dir', async (job, done) => {
-  const pendingFiles = fs.readdirSync(process.env.UPLOAD_DIR)
-
-  pendingFiles
+  const pendingFiles = fs
+    .readdirSync(process.env.UPLOAD_DIR)
     .filter(file => file !== '.DS_Store')
-    .forEach(filename => imageQueue.add({ filename }))
 
-  setTimeout(done, 5000)
+  if (+(await imageQueue.getJobCountByTypes('waiting')) === 0) {
+    if (pendingFiles.length) {
+      logger.info(
+        '[Health check] Adding %d files to processor %o',
+        pendingFiles.length,
+        pendingFiles,
+      )
+      pendingFiles.forEach(filename => imageQueue.add({ filename }))
+    }
+  } else {
+    logger.info(
+      `[Health check] Skipping %d files while image processor queue is not empty`,
+      pendingFiles.length,
+    )
+  }
+
+  done()
 })
 
 export default imageQueue

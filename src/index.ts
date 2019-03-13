@@ -40,7 +40,7 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
 serverStartingHealthCheck()
   .then(() => {
     imageHealthCheckQueue.add('clean-uploads-dir', null, {
-      repeat: { every: 5000 },
+      repeat: { every: 500 },
     })
     app.listen(process.env.PORT, () =>
       logger.info('Server has started with %o', {
