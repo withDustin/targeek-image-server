@@ -7,6 +7,7 @@ import {
   multer,
   renameFilesToChecksum,
 } from 'middlewares/files'
+import path from 'path'
 import logger from 'utils/logger'
 
 const router = express.Router()
@@ -28,10 +29,9 @@ router.get('/:fileName', async (req, res, next) => {
     const fileBuffer = await readFileBuffer(fileName)
 
     if (!fileBuffer) {
-      return res.status(404).send({
-        code: 404,
-        message: 'File not found',
-      })
+      return res
+        .status(404)
+        .sendFile(path.resolve(__dirname, '../../static/empty.webp'))
     }
 
     const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
