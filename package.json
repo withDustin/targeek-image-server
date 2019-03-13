@@ -6,24 +6,29 @@
   "author": "Dương Đỗ <dustin.do95@gmail.com>",
   "license": "MIT",
   "scripts": {
-    "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly -r tsconfig-paths/register -r ./dotenv src/index.ts"
+    "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly -r tsconfig-paths/register -r ./dotenv src/index.ts",
+    "build": "tsc",
+    "start:production": "NODE_ENV=production NODE_PATH=dist node -r ./dotenv dist/index"
   },
   "dependencies": {
     "aws-sdk": "^2.419.0",
     "body-parser": "^1.18.3",
     "bull": "^3.7.0",
     "bull-arena": "^2.6.2",
+    "cors": "^2.8.5",
     "express": "^4.16.4",
     "file-type": "^10.9.0",
     "md5-file": "^4.0.0",
     "method-override": "^3.0.0",
     "multer": "^1.4.1",
     "sharp": "^0.21.3",
+    "typescript": "^3.3.3333",
     "winston": "^3.2.1"
   },
   "devDependencies": {
     "@types/body-parser": "^1.17.0",
     "@types/bull": "^3.5.8",
+    "@types/cors": "^2.8.4",
     "@types/express": "^4.16.1",
     "@types/md5-file": "^4.0.0",
     "@types/method-override": "^0.0.31",
@@ -36,7 +41,6 @@
     "ts-node-dev": "^1.0.0-pre.32",
     "tsconfig-paths": "^3.8.0",
     "tslint": "^5.13.1",
-    "tslint-config-prettier": "^1.18.0",
-    "typescript": "^3.3.3333"
+    "tslint-config-prettier": "^1.18.0"
   }
 }

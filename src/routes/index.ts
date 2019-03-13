@@ -12,7 +12,7 @@ import logger from 'utils/logger'
 const router = express.Router()
 
 router.put(
-  '/image',
+  '/images',
   multer,
   renameFilesToChecksum,
   filesProcessing,

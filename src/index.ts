@@ -4,6 +4,7 @@ import methodOverride from 'method-override'
 
 import routes from 'routes'
 
+import cors from 'cors'
 import { s3 } from 'functions/files'
 import imageQueue, { imageHealthCheckQueue } from 'jobs/image-processor'
 import arenaMiddleware from 'middlewares/arena'
@@ -12,6 +13,7 @@ import logger from 'utils/logger'
 
 const app = express()
 
+app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(methodOverride())

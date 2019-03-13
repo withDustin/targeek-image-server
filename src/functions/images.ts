@@ -1,4 +1,5 @@
 import sharp from 'sharp'
+import logger from 'utils/logger'
 
 const SIZES = {
   large: 1366,
@@ -24,7 +25,7 @@ export const processImage = (buffer: Buffer, options: ImageOptimizeOptions) => {
   const width = options.width || SIZES[options.size || 'large']
 
   return image.resize(null, null, {
-    width,
-    height: options.height,
+    width: +width,
+    height: options.height && +options.height,
   })
 }
