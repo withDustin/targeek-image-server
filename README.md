@@ -6,6 +6,7 @@ An image server that optimizes images by sharp and upload them to AWS S3. Made t
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=flat-square)](http://makeapullrequest.com)
 [![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://github.com/targeek/targeek-image-server/graphs/commit-activity)
 [![code style: prettier](https://img.shields.io/badge/code_style-prettier-ff69b4.svg?style=flat-square)](https://github.com/prettier/prettier)
+[![docker hub pulls](https://img.shields.io/docker/pulls/targeek/targeek-image-server.svg)](https://hub.docker.com/r/targeek/targeek-image-server)
 [![TypeScript](https://badges.frapsoft.com/typescript/awesome/typescript.png?v=101)](https://github.com/ellerbrock/typescript-badges/)
 
 ## Usage
