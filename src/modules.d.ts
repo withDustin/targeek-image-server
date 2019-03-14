@@ -20,8 +20,6 @@ declare namespace NodeJS {
      * @example redis://127.0.0.1:6379
      */
     REDIS_URI: string
-    /** This is useful when you put this server behind a proxy. Eg: http://your-domain/proxy. In this context, the BASE_URL should be `/proxy`. It defaults to `''`. */
-    BASE_URL: string
   }
 }
 declare module 'bull-arena'

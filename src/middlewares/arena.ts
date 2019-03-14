@@ -15,7 +15,7 @@ const arenaMiddleware = Arena(
   },
   {
     // Make the arena dashboard become available at {my-site.com}/arena.
-    basePath: process.env.BASE_URL + '/arena',
+    basePath: '/arena',
 
     // Let express handle the listening.
     disableListen: true,
