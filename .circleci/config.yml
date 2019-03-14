@@ -1,6 +1,6 @@
-version: 2
+version: 2.1
 jobs:
-  build:
+  test:
     docker:
       - image: circleci/node:lts
     steps:
@@ -20,3 +20,57 @@ jobs:
           key: yarn-lock-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
+
+  build_docker_images:
+    docker:
+      - image: circleci/node:lts
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build docker image
+          command: docker build -t $DOCKERHUB_REPO:$CIRCLE_SHA1 -f Dockerfile .
+      - run:
+          name: Publish Docker Image to Docker Hub
+          command: |
+            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
+            docker push $DOCKERHUB_REPO:$CIRCLE_SHA1
+
+  push_release_image_tags:
+    docker:
+      - image: circleci/node:lts
+    steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run: echo 'export VERSION_TAG=$(echo $CIRCLE_TAG | tr -d v)' >> $BASH_ENV
+      - run:
+          name: Tag & publish docker image
+          command: |
+            echo $VERSION_TAG
+            echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USER" --password-stdin
+            docker tag $DOCKERHUB_REPO:$CIRCLE_SHA1 $DOCKERHUB_REPO:latest
+            docker tag $DOCKERHUB_REPO:$CIRCLE_SHA1 $DOCKERHUB_REPO:$VERSION_TAG
+
+            docker push $DOCKERHUB_REPO:latest
+            docker push $DOCKERHUB_REPO:$VERSION_TAG
+
+workflows:
+  version: 2.1
+
+  test_and_build_docker_image:
+    jobs:
+      - test
+      - build_docker_images:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
+      - push_release_image_tags:
+          requires:
+            - build_docker_images
+          filters:
+            tags:
+              only: /^v.*/
