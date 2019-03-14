@@ -24,8 +24,10 @@ router.put(
 )
 
 router.get('/:fileName', async (req, res, next) => {
+  const fileName: string = req.params.fileName
+  logger.verbose('Getting file %s', fileName)
+
   try {
-    const fileName: string = req.params.fileName
     const fileBuffer = await readFileBuffer(fileName)
 
     if (!fileBuffer) {

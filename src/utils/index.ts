@@ -32,6 +32,14 @@ export const serverStartingHealthCheck = async () => {
         'Connected to S3 bucket %s successfully',
         process.env.AWS_S3_BUCKET,
       )
+
+      logger.info('%o', {
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: `${process.env.AWS_SECRET_ACCESS_KEY.toUpperCase()} (length: ${
+          process.env.AWS_SECRET_ACCESS_KEY.length
+        })`,
+        region: process.env.AWS_REGION,
+      })
     })
     .catch(e => {
       logger.error(

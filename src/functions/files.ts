@@ -3,6 +3,7 @@ import getFileType from 'file-type'
 import fs from 'fs'
 import md5File from 'md5-file'
 import path from 'path'
+import logger from 'utils/logger'
 
 const Bucket = process.env.AWS_S3_BUCKET
 
@@ -20,6 +21,7 @@ export const getFilePath = (fileName: string) =>
 export const getFileChecksum = md5File.sync
 
 export const getFileLocation = async (fileName: string) => {
+  logger.verbose(`[getFileLocation][%s] start getting file location`, fileName)
   const existsOnS3 = await s3
     .headObject({ Bucket, Key: fileName })
     .promise()
@@ -27,15 +29,18 @@ export const getFileLocation = async (fileName: string) => {
     .catch(() => Promise.resolve(false))
 
   if (existsOnS3) {
+    logger.verbose(`[getFileLocation][%s] file location is S3`, fileName)
     return 's3'
   }
 
   const existsOnLocal = fs.existsSync(getFilePath(fileName))
 
   if (existsOnLocal) {
+    logger.verbose(`[getFileLocation][%s] file location is LOCAL`, fileName)
     return 'local'
   }
 
+  logger.verbose(`[getFileLocation][%s] file location is NOT_EXIST`, fileName)
   return 'not_exist'
 }
 
@@ -55,22 +60,44 @@ export const renameFile = (oldName: string, newName: string) => {
 }
 
 const readFileFromS3 = (fileName: string) => {
+  logger.verbose(`[readFileFromS3][%s] Reading file from s3`, fileName)
   return s3
     .getObject({ Bucket, Key: fileName })
     .promise()
-    .then(response => Promise.resolve(response.Body))
-    .catch(() => Promise.resolve(null))
+    .then(response => {
+      logger.verbose(`[readFileFromS3][%s] File found on S3`, fileName)
+      return Promise.resolve(response.Body)
+    })
+    .catch(error => {
+      if (error.statusCode !== 404) {
+        return Promise.reject(error)
+      }
+      logger.verbose(
+        `[readFileFromS3][%s] File doesn't exist on S3 %s`,
+        fileName,
+        error.statusCode,
+      )
+      return Promise.resolve(null)
+    })
 }
 
 export const readFileBuffer = async (fileName: string) => {
+  logger.verbose(`[readFileBuffer][%s] Getting file buffer`, fileName)
+
   const s3Buffer = await readFileFromS3(fileName)
   if (s3Buffer) {
     return s3Buffer
   }
 
   if (fs.existsSync(getFilePath(fileName))) {
+    logger.verbose(`[readFileBuffer][%s] File found on local`, fileName)
     return fs.readFileSync(getFilePath(fileName))
   }
+
+  logger.verbose(
+    `[readFileBuffer][%s] File not found on local or s3. Return null`,
+    fileName,
+  )
 
   return null
 }
