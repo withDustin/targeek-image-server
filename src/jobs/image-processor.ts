@@ -95,10 +95,12 @@ imageHealthCheckQueue.process('clean-uploads-dir', async (job, done) => {
       pendingFiles.forEach(filename => imageQueue.add({ filename }))
     }
   } else {
-    logger.info(
-      `[Health check] Skipping %d files while image processor queue is not empty`,
-      pendingFiles.length,
-    )
+    if (pendingFiles.length) {
+      logger.info(
+        `[Health check] Skipping %d files while image processor queue is not empty`,
+        pendingFiles.length,
+      )
+    }
   }
 
   done()
