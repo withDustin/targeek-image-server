@@ -2,6 +2,7 @@
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: 'development' | 'production' | 'test'
+    LOG_LEVEL: string
     /** Ports that express will listen on */
     PORT: string
     /** Upload directory */
@@ -22,4 +23,3 @@ declare namespace NodeJS {
     REDIS_URI: string
   }
 }
-declare module 'bull-arena'

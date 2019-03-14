@@ -1,7 +1,7 @@
 import winston from 'winston'
 
 const logger = winston.createLogger({
-  level: 'verbose',
+  level: process.env.LOG_LEVEL || 'verbose',
   format: winston.format.combine(winston.format.splat(), winston.format.json()),
   transports: [
     new winston.transports.File({ filename: 'error.log', level: 'error' }),

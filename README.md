@@ -28,7 +28,7 @@ docker run -p 4000:4000 -e REDIS_URI=redis://redis-uri targeek/targeek-image-ser
 yarn install
 ```
 
-3. Setup environment variables by edit `.env`, `.env.development`, `.env.production`. You can see the list of environment variables in the `src/modules.d.ts` file.
+3. Setup environment variables by edit `.env`, `.env.development`, `.env.production`. You can see the list of environment variables in the `src/types/modules.d.ts` file.
 
 4. Run
 
