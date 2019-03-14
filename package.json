@@ -9,7 +9,7 @@
     "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly -r tsconfig-paths/register -r ./dotenv src/index.ts",
     "build": "tsc",
     "start:production": "NODE_ENV=production NODE_PATH=dist node -r ./dotenv dist/index",
-    "lint": "yarn tslint --project tsconfig.json \"src/**/*.ts\"",
+    "lint": "yarn tslint --project tsconfig.json \"src/**/*.ts\" && prettier --check src/**/*",
     "test": "yarn lint"
   },
   "dependencies": {
