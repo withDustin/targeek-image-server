@@ -1,0 +1,22 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/node:lts
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - yarn-lock-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install dependencies
+          command: yarn install && ls -l node_modules
+      - run:
+          name: Run tests
+          command: |
+            yarn test
+            yarn build
+      - save_cache:
+          key: yarn-lock-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules

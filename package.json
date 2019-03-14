@@ -8,7 +8,9 @@
   "scripts": {
     "start": "NODE_ENV=development ts-node-dev --respawn --transpileOnly -r tsconfig-paths/register -r ./dotenv src/index.ts",
     "build": "tsc",
-    "start:production": "NODE_ENV=production NODE_PATH=dist node -r ./dotenv dist/index"
+    "start:production": "NODE_ENV=production NODE_PATH=dist node -r ./dotenv dist/index",
+    "lint": "yarn tslint --project tsconfig.json \"src/**/*.ts\"",
+    "test": "yarn lint"
   },
   "dependencies": {
     "aws-sdk": "^2.419.0",
