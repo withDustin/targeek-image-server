@@ -32,18 +32,22 @@ export const imageHealthCheckQueue = new Queue(
 )
 
 imageQueue.process(async (job, done) => {
-  const imageName = job.data.filename
+  const fileName = job.data.filename
+  const filePath = getFilePath(fileName)
+  const imageLocation = await getFileLocation(fileName)
 
-  const imageLocation = await getFileLocation(imageName)
+  if (imageLocation === 'local' && !fs.statSync(filePath).isFile()) {
+    return done()
+  }
 
   job.progress(10)
 
   if (imageLocation !== 'local') {
-    removeFile(imageName)
+    removeFile(fileName)
     return done()
   }
 
-  const fileMimeType = await getFileMimeType(imageName)
+  const fileMimeType = await getFileMimeType(fileName)
 
   job.progress(20)
 
@@ -54,8 +58,7 @@ imageQueue.process(async (job, done) => {
       fileMimeType.mime === 'image/webp'
     )
   ) {
-    const filePath = await getFilePath(imageName)
-    const originalImageBuffer = await readFileBuffer(imageName)
+    const originalImageBuffer = await readFileBuffer(fileName)
 
     job.progress(50)
 
@@ -67,8 +70,8 @@ imageQueue.process(async (job, done) => {
 
   job.progress(75)
 
-  await uploadFileToS3(imageName)
-  removeFile(imageName)
+  await uploadFileToS3(fileName)
+  removeFile(fileName)
 
   done()
 })
@@ -83,7 +86,9 @@ imageQueue.on('error', error => {
 imageHealthCheckQueue.process('clean-uploads-dir', async (job, done) => {
   const pendingFiles = fs
     .readdirSync(process.env.UPLOAD_DIR)
-    .filter(file => file !== '.DS_Store')
+    .filter(
+      file => file !== '.DS_Store' && fs.statSync(getFilePath(file)).isFile(),
+    )
 
   if (+(await imageQueue.getJobCountByTypes('waiting')) === 0) {
     if (pendingFiles.length) {
