@@ -9,23 +9,35 @@ import {
   renameFilesToChecksum,
 } from 'middlewares/files'
 import path from 'path'
+import qs from 'querystring'
 import redis from 'redis'
 import logger from 'utils/logger'
 
 const router = express.Router()
 
 const redisClient = redis.createClient({ url: process.env.REDIS_URI })
+
+const DEFAULT_EXPIRE = Number(process.env.CACHE_EXPIRE || 60)
+
 const cache = ExpressRedisCache({
-  // client: redisClient,
-  host: '127.0.0.1',
-  port: 6379,
+  client: redisClient,
   prefix: 'file',
-  expire: 60e3, // 1 min
+  expire: DEFAULT_EXPIRE, // 1 min,
 })
 
-redisClient.on('message', console.log)
-cache.on('connect', () => logger.info('Cache redis server connected'))
+cache.on('message', message => logger.info('Cached %s', message))
+cache.on('connected', () => logger.info('Cache redis server connected'))
+cache.on('disconnected', () => logger.info('Cache redis server connected'))
 cache.on('error', error => logger.info('Cache redis server error %o', error))
+cache.on('deprecated', deprecated =>
+  logger.warning('deprecated warning', {
+    type: deprecated.type,
+    name: deprecated.name,
+    substitute: deprecated.substitute,
+    file: deprecated.file,
+    line: deprecated.line,
+  }),
+)
 
 router.put(
   '/images',
@@ -34,18 +46,37 @@ router.put(
   filesProcessing,
   (req, res) => {
     logger.verbose('uploaded %o', req.files)
-    cache.get('*', console.log)
+    cache.get('*', logger.info)
     res.send(req.files)
   },
 )
 
 router.get(
   '/:fileName',
-  // (req, res, next) => {
-  //   res.express_redis_cache_name = req.params.fileName
-  //   next()
-  // },
-  cache.route(),
+  (req, res, next) => {
+    const { cache: enableCache = true } = req.query
+    let hasDisableCache = false
+    try {
+      hasDisableCache = !JSON.parse(enableCache)
+    } catch (err) {
+      // ignore
+    }
+
+    if (!hasDisableCache) {
+      const queryString = qs.stringify(req.query)
+      res.express_redis_cache_name = `${req.params.fileName}?${queryString}`
+      return cache.route({
+        binary: true,
+        expire: {
+          200: DEFAULT_EXPIRE,
+          404: 15,
+          xxx: 1,
+        },
+      })(req, res, next)
+    }
+
+    next()
+  },
   async (req, res, next) => {
     const fileName: string = req.params.fileName
     logger.verbose('Getting file %s', fileName)
