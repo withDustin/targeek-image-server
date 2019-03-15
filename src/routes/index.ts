@@ -9,7 +9,6 @@ import {
   renameFilesToChecksum,
 } from 'middlewares/files'
 import path from 'path'
-import qs from 'querystring'
 import redis from 'redis'
 import logger from 'utils/logger'
 
@@ -56,8 +55,7 @@ router.get(
     const { cache: enableCache = 'true' } = req.query
 
     if (enableCache === 'true') {
-      const queryString = qs.stringify(req.query)
-      res.express_redis_cache_name = `${req.params.fileName}?${queryString}`
+      res.express_redis_cache_name = req.originalUrl
       return cache.route({
         binary: true,
         expire: {
