@@ -25,10 +25,10 @@ const cache = ExpressRedisCache({
   expire: DEFAULT_EXPIRE, // 1 min,
 })
 
-cache.on('message', message => logger.info('Cached %s', message))
-cache.on('connected', () => logger.info('Cache redis server connected'))
-cache.on('disconnected', () => logger.info('Cache redis server connected'))
-cache.on('error', error => logger.info('Cache redis server error %o', error))
+cache.on('message', message => logger.verbose('Cached %s', message))
+cache.on('connected', () => logger.verbose('Cache redis server connected'))
+cache.on('disconnected', () => logger.verbose('Cache redis server connected'))
+cache.on('error', error => logger.error('Cache redis server error %o', error))
 cache.on('deprecated', deprecated =>
   logger.warning('deprecated warning', {
     type: deprecated.type,
@@ -53,15 +53,9 @@ router.put(
 router.get(
   '/:fileName',
   (req, res, next) => {
-    const { cache: enableCache = true } = req.query
-    let hasDisableCache = false
-    try {
-      hasDisableCache = !JSON.parse(enableCache)
-    } catch (err) {
-      // ignore
-    }
+    const { cache: enableCache = 'true' } = req.query
 
-    if (!hasDisableCache) {
+    if (enableCache === 'true') {
       const queryString = qs.stringify(req.query)
       res.express_redis_cache_name = `${req.params.fileName}?${queryString}`
       return cache.route({
