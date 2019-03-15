@@ -46,7 +46,6 @@ router.put(
   filesProcessing,
   (req, res) => {
     logger.verbose('uploaded %o', req.files)
-    cache.get('*', logger.info)
     res.send(req.files)
   },
 )
