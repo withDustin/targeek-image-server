@@ -16,12 +16,12 @@ const router = express.Router()
 
 const redisClient = redis.createClient({ url: process.env.REDIS_URI })
 
-const DEFAULT_EXPIRE = Number(process.env.CACHE_EXPIRE || 60)
+const DEFAULT_TTL = Number(process.env.CACHE_TTL || 60)
 
 const cache = ExpressRedisCache({
   client: redisClient,
   prefix: 'file',
-  expire: DEFAULT_EXPIRE, // 1 min,
+  expire: DEFAULT_TTL, // 1 min,
 })
 
 cache.on('message', message => logger.verbose('Cached %s', message))
@@ -59,7 +59,7 @@ router.get(
       return cache.route({
         binary: true,
         expire: {
-          200: DEFAULT_EXPIRE,
+          200: DEFAULT_TTL,
           404: 15,
           xxx: 1,
         },
