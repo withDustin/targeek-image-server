@@ -16,7 +16,7 @@ const router = express.Router()
 
 const redisClient = redis.createClient({ url: process.env.REDIS_URI })
 
-const DEFAULT_TTL = Number(process.env.CACHE_TTL || 60)
+const DEFAULT_TTL = +(process.env.CACHE_TTL || 60)
 
 const cache = ExpressRedisCache({
   client: redisClient,
@@ -54,19 +54,22 @@ router.get(
   (req, res, next) => {
     const { cache: enableCache = 'true' } = req.query
 
-    if (enableCache === 'true') {
-      res.express_redis_cache_name = req.originalUrl
-      return cache.route({
-        binary: true,
-        expire: {
-          200: DEFAULT_TTL,
-          404: 15,
-          xxx: 1,
-        },
-      })(req, res, next)
+    if (
+      enableCache === 'false' ||
+      process.env.DISABLE_EXPRESS_CACHING === 'true'
+    ) {
+      return next()
     }
 
-    next()
+    res.express_redis_cache_name = req.originalUrl
+    return cache.route({
+      binary: true,
+      expire: {
+        200: DEFAULT_TTL,
+        404: 15,
+        xxx: 1,
+      },
+    })(req, res, next)
   },
   async (req, res, next) => {
     const fileName: string = req.params.fileName
