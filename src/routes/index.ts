@@ -63,7 +63,7 @@ router.get(
 
     const isSafari = req.useragent.browser === 'Safari'
 
-    res.express_redis_cache_name = req.originalUrl + isSafari ? '-safari' : ''
+    res.express_redis_cache_name = req.originalUrl + (isSafari ? '-safari' : '')
     return cache.route({
       binary: true,
       expire: {
