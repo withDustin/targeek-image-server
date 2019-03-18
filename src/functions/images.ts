@@ -15,8 +15,12 @@ export interface ImageOptimizeOptions {
   quality?: number
 }
 
-export const processImage = (buffer: Buffer, options: ImageOptimizeOptions) => {
-  const image = sharp(buffer).webp({ quality: +options.quality || 60 })
+export const processImage = (
+  buffer: Buffer,
+  options: ImageOptimizeOptions,
+  format: 'webp' | 'jpeg' = 'webp',
+) => {
+  const image = sharp(buffer)[format]({ quality: +options.quality || 60 })
 
   if (options.size === 'original') {
     return image
