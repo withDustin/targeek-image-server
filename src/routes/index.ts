@@ -61,9 +61,9 @@ router.get(
       return next()
     }
 
-    const isSafari = req.useragent.browser === 'Safari'
+    const imageFormat = req.query.format || 'webp'
 
-    res.express_redis_cache_name = req.originalUrl + (isSafari ? '-safari' : '')
+    res.express_redis_cache_name = `${req.originalUrl}-${imageFormat}`
     return cache.route({
       binary: true,
       expire: {
@@ -75,7 +75,7 @@ router.get(
   },
   async (req, res, next) => {
     const fileName: string = req.params.fileName
-    const useragent = req.useragent
+    const imageFormat = req.query.format
 
     logger.verbose('Getting file %s', fileName)
 
@@ -92,7 +92,7 @@ router.get(
         ? await (await processImage(
             fileBuffer,
             req.query,
-            useragent.browser === 'Safari' ? 'jpeg' : 'webp',
+            imageFormat === 'jpeg' ? 'jpeg' : 'webp',
           )).toBuffer()
         : fileBuffer
 

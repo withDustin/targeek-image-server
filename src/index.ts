@@ -1,7 +1,6 @@
 import bodyParser from 'body-parser'
 import cors from 'cors'
 import express, { NextFunction, Request, Response } from 'express'
-import useragent from 'express-useragent'
 import { imageHealthCheckQueue } from 'jobs/image-processor'
 import methodOverride from 'method-override'
 import arenaMiddleware from 'middlewares/arena'
@@ -15,7 +14,6 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(methodOverride())
-app.use(useragent.express())
 
 app.use('/', arenaMiddleware)
 

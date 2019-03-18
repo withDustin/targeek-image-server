@@ -1,5 +1,4 @@
 import sharp from 'sharp'
-import logger from 'utils/logger'
 
 const SIZES = {
   large: 1366,
