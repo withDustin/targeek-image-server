@@ -1,13 +1,11 @@
 import bodyParser from 'body-parser'
-import express, { NextFunction, Request, Response } from 'express'
-import methodOverride from 'method-override'
-
-import routes from 'routes'
-
 import cors from 'cors'
-import { s3 } from 'functions/files'
-import imageQueue, { imageHealthCheckQueue } from 'jobs/image-processor'
+import express, { NextFunction, Request, Response } from 'express'
+import useragent from 'express-useragent'
+import { imageHealthCheckQueue } from 'jobs/image-processor'
+import methodOverride from 'method-override'
 import arenaMiddleware from 'middlewares/arena'
+import routes from 'routes'
 import { serverStartingHealthCheck } from 'utils'
 import logger from 'utils/logger'
 
@@ -17,6 +15,7 @@ app.use(cors())
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({ extended: true }))
 app.use(methodOverride())
+app.use(useragent.express())
 
 app.use('/', arenaMiddleware)
 

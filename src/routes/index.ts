@@ -73,6 +73,8 @@ router.get(
   },
   async (req, res, next) => {
     const fileName: string = req.params.fileName
+    const useragent = req.useragent
+
     logger.verbose('Getting file %s', fileName)
 
     try {
@@ -85,7 +87,11 @@ router.get(
       }
 
       const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
-        ? await (await processImage(fileBuffer, req.query)).toBuffer()
+        ? await (await processImage(
+            fileBuffer,
+            req.query,
+            useragent.browser === 'Safari' ? 'jpeg' : 'webp',
+          )).toBuffer()
         : fileBuffer
 
       logger.verbose(
