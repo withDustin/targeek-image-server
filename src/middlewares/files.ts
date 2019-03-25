@@ -82,5 +82,5 @@ export const filesProcessing: RequestHandler = async (req, res, next) => {
     }
   })
 
-  next()
+  setTimeout(next, +(process.env.DELAY_AFTER_UPLOADED || 0))
 }

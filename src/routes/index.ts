@@ -84,6 +84,7 @@ router.get(
 
       if (!fileBuffer) {
         return res
+          .header('Cache-Control', 'private')
           .status(404)
           .sendFile(path.resolve(__dirname, '../../static/empty.webp'))
       }
