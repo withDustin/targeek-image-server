@@ -22,7 +22,8 @@ declare namespace NodeJS {
      */
     REDIS_URI: string
     CACHE_TTL: string
-    DISABLE_EXPRESS_CACHING: string
+    DISABLE_EXPRESS_CACHING: 'true' | 'false'
     DELAY_AFTER_UPLOADED: string
+    ENABLE_QUEUE: 'true' | 'false'
   }
 }
