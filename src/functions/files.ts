@@ -160,5 +160,9 @@ export const processAndUpload = async (fileName: string) => {
 }
 
 export const getObjectUrl = (fileName: string) => {
-  return s3.getSignedUrl('getObject', { Bucket, Key: fileName })
+  return s3.getSignedUrl('getObject', {
+    Bucket,
+    Key: fileName,
+    Expires: 60 * 24 * 7,
+  })
 }

@@ -79,7 +79,7 @@ router.get(
 
     logger.verbose('Getting file %s', fileName)
 
-    res.redirect(getObjectUrl(fileName))
+    res.redirect(getObjectUrl(fileName), 301)
     return
 
     try {
