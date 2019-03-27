@@ -1,7 +1,7 @@
 import express from 'express'
 import ExpressRedisCache from 'express-redis-cache'
 import fileType from 'file-type'
-import { readFileBuffer } from 'functions/files'
+import { getObjectUrl, readFileBuffer } from 'functions/files'
 import { processImage } from 'functions/images'
 import {
   filesProcessing,
@@ -79,6 +79,9 @@ router.get(
 
     logger.verbose('Getting file %s', fileName)
 
+    res.redirect(getObjectUrl(fileName))
+    return
+
     try {
       const fileBuffer = await readFileBuffer(fileName)
 
@@ -102,6 +105,8 @@ router.get(
         fileName,
         fileType(fileBuffer).mime,
       )
+
+      logger.info(getObjectUrl(fileName))
 
       res
         .header('Cache-Control', 'public, max-age=31536000')

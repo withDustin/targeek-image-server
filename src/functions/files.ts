@@ -158,3 +158,7 @@ export const processAndUpload = async (fileName: string) => {
   await uploadFileToS3(fileName)
   removeFile(fileName)
 }
+
+export const getObjectUrl = (fileName: string) => {
+  return s3.getSignedUrl('getObject', { Bucket, Key: fileName })
+}
