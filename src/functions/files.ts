@@ -286,8 +286,6 @@ export const getObjectUrl = (
 ) => {
   const fileNameWithSize = generateFileNameWithSize(fileName, size)
 
-  console.log(fileNameWithSize)
-
   return s3.getSignedUrl('getObject', {
     Bucket,
     Key: fileNameWithSize,
