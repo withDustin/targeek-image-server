@@ -21,5 +21,9 @@ declare namespace NodeJS {
      * @example redis://127.0.0.1:6379
      */
     REDIS_URI: string
+    CACHE_TTL: string
+    DISABLE_EXPRESS_CACHING: 'true' | 'false'
+    DELAY_AFTER_UPLOADED: string
+    ENABLE_QUEUE: 'true' | 'false'
   }
 }

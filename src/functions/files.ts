@@ -3,6 +3,7 @@ import getFileType from 'file-type'
 import fs from 'fs'
 import md5File from 'md5-file'
 import path from 'path'
+import sharp = require('sharp')
 import logger from 'utils/logger'
 
 const Bucket = process.env.AWS_S3_BUCKET
@@ -122,4 +123,46 @@ export const getFileMimeType = async (fileName: string) => {
   }
 
   return await getFileType(fileBuffer)
+}
+
+export const processAndUpload = async (fileName: string) => {
+  const filePath = getFilePath(fileName)
+  const imageLocation = await getFileLocation(fileName)
+
+  if (imageLocation === 'local' && !fs.statSync(filePath).isFile()) {
+    return
+  }
+
+  if (imageLocation !== 'local') {
+    removeFile(fileName)
+    return
+  }
+
+  const fileMimeType = await getFileMimeType(fileName)
+
+  if (
+    fileMimeType &&
+    !(
+      !fileMimeType.mime.startsWith('image') ||
+      fileMimeType.mime === 'image/webp'
+    )
+  ) {
+    const originalImageBuffer = await readFileBuffer(fileName)
+
+    const convertedImageBuffer = await sharp(originalImageBuffer)
+      .webp()
+      .toBuffer()
+    fs.writeFileSync(filePath, convertedImageBuffer)
+  }
+
+  await uploadFileToS3(fileName)
+  removeFile(fileName)
+}
+
+export const getObjectUrl = (fileName: string) => {
+  return s3.getSignedUrl('getObject', {
+    Bucket,
+    Key: fileName,
+    Expires: 60 * 24 * 7,
+  })
 }

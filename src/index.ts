@@ -1,13 +1,10 @@
 import bodyParser from 'body-parser'
-import express, { NextFunction, Request, Response } from 'express'
-import methodOverride from 'method-override'
-
-import routes from 'routes'
-
 import cors from 'cors'
-import { s3 } from 'functions/files'
-import imageQueue, { imageHealthCheckQueue } from 'jobs/image-processor'
+import express, { NextFunction, Request, Response } from 'express'
+import { imageHealthCheckQueue } from 'jobs/image-processor'
+import methodOverride from 'method-override'
 import arenaMiddleware from 'middlewares/arena'
+import routes from 'routes'
 import { serverStartingHealthCheck } from 'utils'
 import logger from 'utils/logger'
 

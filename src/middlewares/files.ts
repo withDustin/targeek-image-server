@@ -5,6 +5,7 @@ import {
   getFileChecksum,
   getFileLocation,
   getFilePath,
+  processAndUpload,
   removeFile,
   renameFile,
 } from 'functions/files'
@@ -76,11 +77,15 @@ export const filesProcessing: RequestHandler = async (req, res, next) => {
     }
   >
 
-  files.forEach(async file => {
-    if (file.mimetype.startsWith('image/')) {
-      await imageQueue.add(file)
-    }
-  })
-
-  next()
+  if (process.env.ENABLE_QUEUE === 'true') {
+    files.forEach(async file => {
+      if (file.mimetype.startsWith('image/')) {
+        await imageQueue.add(file)
+      }
+    })
+    setTimeout(next, +(process.env.DELAY_AFTER_UPLOADED || 0))
+  } else {
+    await Promise.all(files.map(file => processAndUpload(file.filename)))
+    next()
+  }
 }
