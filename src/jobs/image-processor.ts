@@ -6,7 +6,9 @@ import {
   getFilePath,
   readFileBuffer,
   removeFile,
+  resizeImage,
   uploadFileToS3,
+  uploadImagesToS3AndRemove,
 } from 'functions/files'
 import sharp = require('sharp')
 import logger from 'utils/logger'
@@ -62,16 +64,17 @@ imageQueue.process(async (job, done) => {
 
     job.progress(50)
 
-    const convertedImageBuffer = await sharp(originalImageBuffer)
-      .webp()
-      .toBuffer()
-    fs.writeFileSync(filePath, convertedImageBuffer)
+    // const convertedImageBuffer = await sharp(originalImageBuffer)
+    //   .webp()
+    //   .toBuffer()
+    // fs.writeFileSync(filePath, convertedImageBuffer)
+    await resizeImage(fileName, originalImageBuffer)
+    job.progress(75)
+    await uploadImagesToS3AndRemove(fileName)
   }
 
-  job.progress(75)
-
-  await uploadFileToS3(fileName)
-  removeFile(fileName)
+  // await uploadFileToS3(fileName)
+  // removeFile(fileName)
 
   done()
 })
