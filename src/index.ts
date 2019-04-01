@@ -34,10 +34,11 @@ app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   })
 })
 
+/** Run cron job at 01:00AM every day */
 serverStartingHealthCheck()
   .then(() => {
     imageHealthCheckQueue.add('clean-uploads-dir', null, {
-      repeat: { every: 500 },
+      repeat: { cron: process.env.HEALTH_CHECK_CRON || '0 1 * * *' },
     })
     app.listen(process.env.PORT, () =>
       logger.info('Server has started with %o', {

@@ -61,9 +61,9 @@ router.get(
       return next()
     }
 
-    const imageFormat = req.query.format || 'webp'
+    // const imageFormat = req.query.format || 'webp'
 
-    res.express_redis_cache_name = `${req.originalUrl}-${imageFormat}`
+    res.express_redis_cache_name = `${req.originalUrl}`
     return cache.route({
       binary: true,
       expire: {
@@ -75,47 +75,46 @@ router.get(
   },
   async (req, res, next) => {
     const fileName: string = req.params.fileName
-    const imageFormat = req.query.format
+    // const imageFormat = req.query.format
 
     logger.verbose('Getting file %s', fileName)
 
-    res.redirect(getObjectUrl(fileName), 301)
-    return
+    res.redirect(getObjectUrl(fileName, req.query), 301)
 
-    try {
-      const fileBuffer = await readFileBuffer(fileName)
+    // try {
+    //   const fileBuffer = await readFileBuffer(fileName)
 
-      if (!fileBuffer) {
-        return res
-          .header('Cache-Control', 'private')
-          .status(404)
-          .sendFile(path.resolve(__dirname, '../../static/empty.webp'))
-      }
+    //   if (!fileBuffer) {
+    //     return res
+    //       .header('Cache-Control', 'private')
+    //       .status(404)
+    //       .sendFile(path.resolve(__dirname, '../../static/empty.webp'))
+    //   }
 
-      const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
-        ? await (await processImage(
-            fileBuffer,
-            req.query,
-            imageFormat === 'jpeg' ? 'jpeg' : 'webp',
-          )).toBuffer()
-        : fileBuffer
+    //   const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
+    //     ? await (await processImage(
+    //         fileBuffer,
+    //         req.query,
+    //         imageFormat === 'jpeg' ? 'jpeg' : 'webp',
+    //       )).toBuffer()
+    //     : fileBuffer
 
-      logger.verbose(
-        'Downloaded file %s %s',
-        fileName,
-        fileType(fileBuffer).mime,
-      )
+    //   logger.verbose(
+    //     'Downloaded file %s %s',
+    //     fileName,
+    //     fileType(fileBuffer).mime,
+    //   )
 
-      logger.info(getObjectUrl(fileName))
+    //   logger.info(getObjectUrl(fileName))
 
-      res
-        .header('Cache-Control', 'public, max-age=31536000')
-        .contentType(fileType(optimizedFileBuffer).mime)
-        .send(optimizedFileBuffer)
-    } catch (err) {
-      logger.error(err)
-      throw err
-    }
+    //   res
+    //     .header('Cache-Control', 'public, max-age=31536000')
+    //     .contentType(fileType(optimizedFileBuffer).mime)
+    //     .send(optimizedFileBuffer)
+    // } catch (err) {
+    //   logger.error(err)
+    //   throw err
+    // }
   },
 )
 

@@ -8,6 +8,31 @@ import logger from 'utils/logger'
 
 const Bucket = process.env.AWS_S3_BUCKET
 
+const imageSizes: Array<{ name: SizeName; maxWidth: number }> = [
+  {
+    name: 'original',
+    maxWidth: 1366,
+  },
+  {
+    name: 'large',
+    maxWidth: 1024,
+  },
+  {
+    name: 'medium',
+    maxWidth: 768,
+  },
+  {
+    name: 'small',
+    maxWidth: 448,
+  },
+  {
+    name: 'thumb',
+    maxWidth: 128,
+  },
+]
+
+type SizeName = 'original' | 'large' | 'medium' | 'small' | 'thumb'
+
 export const s3 = new S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -85,14 +110,14 @@ const readFileFromS3 = (fileName: string) => {
 export const readFileBuffer = async (fileName: string) => {
   logger.verbose(`[readFileBuffer][%s] Getting file buffer`, fileName)
 
-  const s3Buffer = await readFileFromS3(fileName)
-  if (s3Buffer) {
-    return s3Buffer
-  }
-
   if (fs.existsSync(getFilePath(fileName))) {
     logger.verbose(`[readFileBuffer][%s] File found on local`, fileName)
     return fs.readFileSync(getFilePath(fileName))
+  }
+
+  const s3Buffer = await readFileFromS3(fileName)
+  if (s3Buffer) {
+    return s3Buffer
   }
 
   logger.verbose(
@@ -125,6 +150,47 @@ export const getFileMimeType = async (fileName: string) => {
   return await getFileType(fileBuffer)
 }
 
+const generateFileNameWithSize = (fileName: string, sizeName: SizeName) => {
+  const sizeSuffix = sizeName === 'original' ? '' : `-${sizeName}`
+
+  return /\./.test(fileName)
+    ? fileName.replace(/\./, `${sizeSuffix}.`)
+    : `${fileName}${sizeSuffix}`
+}
+
+export const resizeImage = (fileName: string, buffer: Buffer) => {
+  return Promise.all(
+    imageSizes.map(async size => {
+      const resizedBuffer = await sharp(buffer)
+        .resize(size.maxWidth, null, {
+          withoutEnlargement: true,
+        })
+        .jpeg()
+        .toBuffer()
+
+      const filePath = path.resolve(
+        'uploads/',
+        generateFileNameWithSize(fileName, size.name),
+      )
+
+      return fs.writeFileSync(filePath, resizedBuffer)
+    }),
+  )
+}
+
+export const uploadImagesToS3AndRemove = (fileName: string) => {
+  return Promise.all(
+    imageSizes.map(async size => {
+      const fileNameWithSize = generateFileNameWithSize(fileName, size.name)
+
+      if (fs.existsSync(getFilePath(fileNameWithSize))) {
+        await uploadFileToS3(fileNameWithSize)
+        removeFile(fileNameWithSize)
+      }
+    }),
+  )
+}
+
 export const processAndUpload = async (fileName: string) => {
   const filePath = getFilePath(fileName)
   const imageLocation = await getFileLocation(fileName)
@@ -149,20 +215,80 @@ export const processAndUpload = async (fileName: string) => {
   ) {
     const originalImageBuffer = await readFileBuffer(fileName)
 
-    const convertedImageBuffer = await sharp(originalImageBuffer)
-      .webp()
-      .toBuffer()
-    fs.writeFileSync(filePath, convertedImageBuffer)
+    await resizeImage(fileName, originalImageBuffer)
   }
 
-  await uploadFileToS3(fileName)
-  removeFile(fileName)
+  await uploadImagesToS3AndRemove(fileName)
 }
 
-export const getObjectUrl = (fileName: string) => {
+export const reProcessLocalFiles = async (startAt: number = 0) => {
+  const files = await fs.readdirSync(UPLOAD_DIR)
+  const maxJobs = 10
+
+  let count = startAt
+  while (count < files.length) {
+    const jobFiles = files.slice(count, count + maxJobs)
+
+    await Promise.all(
+      jobFiles.map(async (fileName, idx) => {
+        // skip if this is resized file
+        if (/-/.test(fileName)) {
+          return
+        }
+
+        logger.verbose(`[${count + idx}]: ${fileName}`)
+        const buffer = await readFileBuffer(fileName)
+        const fileMimeType = await getFileType(buffer)
+
+        if (fileMimeType && fileMimeType.mime.startsWith('image')) {
+          await resizeImage(fileName, buffer)
+        }
+        return
+      }),
+    )
+
+    count += maxJobs
+  }
+}
+
+export const reUploadImageToS3AndRemove = async (startAt: number = 0) => {
+  const files = await fs.readdirSync(UPLOAD_DIR)
+  const maxJobs = 10
+  let count = startAt
+
+  while (count < files.length) {
+    const jobFiles = files.slice(count, count + maxJobs)
+
+    await Promise.all(
+      jobFiles.map(async (fileName, idx) => {
+        logger.verbose(`[${count + idx}]: ${fileName}`)
+        const buffer = await readFileBuffer(fileName)
+        const fileMimeType = await getFileType(buffer)
+
+        if (fileMimeType && fileMimeType.mime.startsWith('image')) {
+          if (fs.existsSync(getFilePath(fileName))) {
+            await s3
+              .putObject({ Bucket, Key: fileName, Body: buffer })
+              .promise()
+            removeFile(fileName)
+          }
+        }
+      }),
+    )
+
+    count += maxJobs
+  }
+}
+
+export const getObjectUrl = (
+  fileName: string,
+  { size = 'original' }: { size?: SizeName },
+) => {
+  const fileNameWithSize = generateFileNameWithSize(fileName, size)
+
   return s3.getSignedUrl('getObject', {
     Bucket,
-    Key: fileName,
+    Key: fileNameWithSize,
     Expires: 60 * 24 * 7,
   })
 }
