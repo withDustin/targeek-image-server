@@ -41,7 +41,7 @@
     "@types/node": "11.11.1",
     "@types/redis": "2.8.12",
     "@types/sharp": "0.21.3",
-    "dotenv": "6.2.0",
+    "dotenv": "7.0.0",
     "prettier": "1.16.4",
     "ts-node": "8.0.3",
     "ts-node-dev": "1.0.0-pre.32",
