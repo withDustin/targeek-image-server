@@ -15,10 +15,10 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bull@3.5.8":
-  version "3.5.8"
-  resolved "https://registry.yarnpkg.com/@types/bull/-/bull-3.5.8.tgz#db656a9e996ae07fc9fbf0e2dd7a3a9ee1140dbe"
-  integrity sha512-uk4WsKyIA6ODeDDYJ8ljA4WEGE0FHIsX//bbpHxHSJ+wNthEyKkYCU3xaMsa3e+/Vn4RK38rRqYx1cq4RunKmg==
+"@types/bull@3.5.11":
+  version "3.5.11"
+  resolved "https://registry.yarnpkg.com/@types/bull/-/bull-3.5.11.tgz#baa1d6752e926e549190647a541056df1cc086b7"
+  integrity sha512-cP464wO4pQnvJsYTIwcSitdEv5aXaMsRoP07raOgOSlJDnaDYmV6jMf1Vk1dWhtfJ0FRtjpXeHaYMc/j8bwb4A==
   dependencies:
     "@types/ioredis" "*"
 
