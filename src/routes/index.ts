@@ -40,11 +40,6 @@ router.get('/:fileName', async (req, res, next) => {
   const location = await getFileLocation(fileNameWithSize)
 
   switch (location) {
-    // case FILE_LOCATIONS.LOCAL:
-    //   return res
-    //     .header('Cache-Control', 'public, max-age=31536000')
-    //     .sendFile(getFilePath(fileNameWithSize))
-
     case FILE_LOCATIONS.S3:
       return res.redirect(301, getPublicUrl(fileName, req.query))
 

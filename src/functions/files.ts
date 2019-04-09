@@ -336,28 +336,29 @@ export const listObjects = ({
     .promise()
 }
 
-export const listAllObject = async () => {
-  let marker
-  let isTruncated = true
-  let objects: S3.Object[] = []
-  let count = 0
+export const listAllObjects = async (
+  startAt?: number,
+  marker?: string,
+  prevObjects?: S3.Object[],
+): Promise<S3.Object[]> => {
+  let objects: S3.Object[] = prevObjects
+  let count = startAt
 
-  while (isTruncated) {
-    logger.verbose(
-      `[Get objects from ${count}000-${count + 1}000]: marker ${marker}`,
+  logger.verbose(
+    `[Get objects from ${count}000-${count + 1}000]: marker ${marker}`,
+  )
+  const response: S3.ListObjectsOutput = await listObjects({
+    marker,
+  })
+
+  objects = objects.concat(response.Contents)
+
+  if (response.IsTruncated) {
+    return await listAllObjects(
+      ++count,
+      response.Contents.slice(-1)[0].Key,
+      objects,
     )
-    const response: S3.ListObjectsOutput = await listObjects({
-      marker,
-    })
-
-    objects = objects.concat(response.Contents)
-
-    isTruncated = response.IsTruncated
-
-    if (isTruncated) {
-      marker = response.Contents.slice(-1)[0].Key
-    }
-    count += 1
   }
 
   return objects
@@ -373,66 +374,71 @@ export const putObjectACL = ({ key, acl }: { key: string; acl: ACL }) => {
     .promise()
 }
 
-export const rePutAllObjectACL = async (
-  startAt: number = 0,
-  fromMarker?: string,
-) => {
-  let marker = fromMarker
-  let isTruncated = true
-  let count = startAt
-  let errorObjects: S3.Object[] = []
+export const rePutAllErrorObjectsACL = async (
+  prevObjects: S3.Object[],
+): Promise<void> => {
+  let objects = prevObjects
 
-  while (isTruncated) {
-    logger.verbose(
-      `[Put object ACL from ${count}000-${count + 1}000]: marker ${marker}`,
-    )
-    const response: S3.ListObjectsOutput = await listObjects({
-      marker,
-    })
+  logger.verbose(`[Re put error object ACL]: ${objects.length} objects`)
 
-    await Promise.all(
-      response.Contents.map(async item => {
-        try {
-          return await putObjectACL({ key: item.Key, acl: 'public-read' })
-        } catch (err) {
-          errorObjects = errorObjects.concat(item)
-          logger.error(`[Put object ACL error]: ${item.Key}`, err)
-        }
-      }),
-    )
+  objects = (await Promise.all(
+    objects.map(async item => {
+      try {
+        await putObjectACL({ key: item.Key, acl: 'public-read' })
+        return null
+      } catch (err) {
+        logger.error(`[Put object ACL error]: ${item.Key}`, err)
+        return item
+      }
+    }),
+  )).filter(object => object)
 
-    isTruncated = response.IsTruncated
-
-    if (isTruncated) {
-      marker = response.Contents.slice(-1)[0].Key
-    }
-    count += 1
+  if (objects.length < 1) {
+    logger.info(`[Re put error object ACL has finished]`)
+  } else {
+    return await rePutAllErrorObjectsACL(objects)
   }
+}
 
-  if (!isTruncated) {
+export const rePutAllObjectsACL = async (
+  startAt: number = 0,
+  marker?: string,
+  prevErrorObjects?: S3.Object[],
+): Promise<void> => {
+  let count = startAt
+  let errorObjects: S3.Object[] = prevErrorObjects
+
+  logger.verbose(
+    `[Put object ACL from ${count}000-${count + 1}000]: marker ${marker}`,
+  )
+
+  const response: S3.ListObjectsOutput = await listObjects({
+    marker,
+  })
+
+  await Promise.all(
+    response.Contents.map(async item => {
+      try {
+        return await putObjectACL({ key: item.Key, acl: 'public-read' })
+      } catch (err) {
+        errorObjects = errorObjects.concat(item)
+        logger.error(`[Put object ACL error]: ${item.Key}`, err)
+      }
+    }),
+  )
+
+  if (response.IsTruncated) {
+    return await rePutAllObjectsACL(
+      ++count,
+      response.Contents.slice(-1)[0].Key,
+      errorObjects,
+    )
+  } else {
     logger.info(
       `[Put object ACl has finished] with ${errorObjects.length} errors`,
     )
-  }
 
-  while (errorObjects.length > 0) {
-    logger.verbose(`[Re put error object ACL]: ${errorObjects.length} objects`)
-
-    errorObjects = await Promise.all(
-      errorObjects.map(async item => {
-        try {
-          await putObjectACL({ key: item.Key, acl: 'public-read' })
-          return null
-        } catch (err) {
-          logger.error(`[Put object ACL error]: ${item.Key}`, err)
-          return item
-        }
-      }),
-    )
-  }
-
-  if (errorObjects.length < 1) {
-    logger.info(`[Re put error object ACL has finished]`)
+    return await rePutAllErrorObjectsACL(errorObjects)
   }
 }
 
@@ -449,7 +455,7 @@ export const getObjectUrl = (
   })
 }
 
-export const getPublicUrl = (
+export const getObjectPublicUrl = (
   fileName: string,
   { size = 'original' }: { size?: SizeName } = {},
 ) => {
