@@ -7,6 +7,7 @@ import sharp = require('sharp')
 import logger from 'utils/logger'
 
 const Bucket = process.env.AWS_S3_BUCKET
+const Region = process.env.AWS_REGION
 
 const imageSizes: Array<{ name: SizeName; maxWidth: number }> = [
   {
@@ -33,6 +34,15 @@ const imageSizes: Array<{ name: SizeName; maxWidth: number }> = [
 
 type SizeName = 'original' | 'large' | 'medium' | 'small' | 'thumb'
 
+type ACL =
+  | 'private'
+  | 'public-read'
+  | 'public-read-write'
+  | 'authenticated-read'
+  | 'aws-exec-read'
+  | 'bucket-owner-read'
+  | 'bucket-owner-full-control'
+
 export const s3 = new S3({
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
@@ -40,6 +50,12 @@ export const s3 = new S3({
 })
 
 const UPLOAD_DIR = process.env.UPLOAD_DIR || 'uploads/'
+
+export const FILE_LOCATIONS = {
+  LOCAL: 'local',
+  S3: 's3',
+  NOT_EXIST: 'not_exist',
+}
 
 export const getFilePath = (fileName: string) =>
   path.resolve(UPLOAD_DIR, fileName)
@@ -56,18 +72,18 @@ export const getFileLocation = async (fileName: string) => {
 
   if (existsOnS3) {
     logger.verbose(`[getFileLocation][%s] file location is S3`, fileName)
-    return 's3'
+    return FILE_LOCATIONS.S3
   }
 
   const existsOnLocal = fs.existsSync(getFilePath(fileName))
 
   if (existsOnLocal) {
     logger.verbose(`[getFileLocation][%s] file location is LOCAL`, fileName)
-    return 'local'
+    return FILE_LOCATIONS.LOCAL
   }
 
   logger.verbose(`[getFileLocation][%s] file location is NOT_EXIST`, fileName)
-  return 'not_exist'
+  return FILE_LOCATIONS.NOT_EXIST
 }
 
 export const fileExists = async (fileName: string) => {
@@ -107,6 +123,15 @@ const readFileFromS3 = (fileName: string) => {
     })
 }
 
+export const readFileBufferFromLocal = async (fileName: string) => {
+  if (fs.existsSync(getFilePath(fileName))) {
+    logger.verbose(`[readFileBuffer][%s] File found on local`, fileName)
+    return fs.readFileSync(getFilePath(fileName))
+  }
+
+  return
+}
+
 export const readFileBuffer = async (fileName: string) => {
   logger.verbose(`[readFileBuffer][%s] Getting file buffer`, fileName)
 
@@ -137,7 +162,9 @@ export const uploadFileToS3 = async (fileName: string) => {
 
   const fileBuffer = fs.readFileSync(getFilePath(fileName))
 
-  return s3.putObject({ Bucket, Key: fileName, Body: fileBuffer }).promise()
+  return s3
+    .putObject({ Bucket, Key: fileName, Body: fileBuffer, ACL: 'public-read' })
+    .promise()
 }
 
 export const getFileMimeType = async (fileName: string) => {
@@ -150,7 +177,14 @@ export const getFileMimeType = async (fileName: string) => {
   return await getFileType(fileBuffer)
 }
 
-const generateFileNameWithSize = (fileName: string, sizeName: SizeName) => {
+export const generateFileNameWithSize = (
+  fileName: string,
+  sizeName?: SizeName,
+) => {
+  if (!sizeName) {
+    return fileName
+  }
+
   const sizeSuffix = sizeName === 'original' ? '' : `-${sizeName}`
 
   return /\./.test(fileName)
@@ -280,6 +314,128 @@ export const reUploadImageToS3AndRemove = async (startAt: number = 0) => {
   }
 }
 
+/**
+ * flow this document https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property
+ * @param limit Sets the maximum number of keys returned in the response. The response might contain fewer keys but will never contain more.
+ * @param marker Specifies the key to start with when listing objects in a bucket.
+ */
+export const listObjects = ({
+  limit,
+  marker,
+}: {
+  limit?: number
+  marker?: string
+} = {}) => {
+  return s3
+    .listObjects({
+      Bucket,
+      // up to 1000
+      MaxKeys: limit,
+      Marker: marker,
+    })
+    .promise()
+}
+
+export const listAllObject = async () => {
+  let marker
+  let isTruncated = true
+  let objects: S3.Object[] = []
+  let count = 0
+
+  while (isTruncated) {
+    logger.verbose(
+      `[Get objects from ${count}000-${count + 1}000]: marker ${marker}`,
+    )
+    const response: S3.ListObjectsOutput = await listObjects({
+      marker,
+    })
+
+    objects = objects.concat(response.Contents)
+
+    isTruncated = response.IsTruncated
+
+    if (isTruncated) {
+      marker = response.Contents.slice(-1)[0].Key
+    }
+    count += 1
+  }
+
+  return objects
+}
+
+export const putObjectACL = ({ key, acl }: { key: string; acl: ACL }) => {
+  return s3
+    .putObjectAcl({
+      Bucket,
+      Key: key,
+      ACL: acl,
+    })
+    .promise()
+}
+
+export const rePutAllObjectACL = async (
+  startAt: number = 0,
+  fromMarker?: string,
+) => {
+  let marker = fromMarker
+  let isTruncated = true
+  let count = startAt
+  let errorObjects: S3.Object[] = []
+
+  while (isTruncated) {
+    logger.verbose(
+      `[Put object ACL from ${count}000-${count + 1}000]: marker ${marker}`,
+    )
+    const response: S3.ListObjectsOutput = await listObjects({
+      marker,
+    })
+
+    await Promise.all(
+      response.Contents.map(async item => {
+        try {
+          return await putObjectACL({ key: item.Key, acl: 'public-read' })
+        } catch (err) {
+          errorObjects = errorObjects.concat(item)
+          logger.error(`[Put object ACL error]: ${item.Key}`, err)
+        }
+      }),
+    )
+
+    isTruncated = response.IsTruncated
+
+    if (isTruncated) {
+      marker = response.Contents.slice(-1)[0].Key
+    }
+    count += 1
+  }
+
+  if (!isTruncated) {
+    logger.info(
+      `[Put object ACl has finished] with ${errorObjects.length} errors`,
+    )
+  }
+
+  while (errorObjects.length > 0) {
+    logger.verbose(`[Re put error object ACL]: ${errorObjects.length} objects`)
+
+    errorObjects = await Promise.all(
+      errorObjects.map(async item => {
+        try {
+          await putObjectACL({ key: item.Key, acl: 'public-read' })
+          return null
+        } catch (err) {
+          logger.error(`[Put object ACL error]: ${item.Key}`, err)
+          return item
+        }
+      }),
+    )
+  }
+
+  if (errorObjects.length < 1) {
+    logger.info(`[Re put error object ACL has finished]`)
+  }
+}
+
 export const getObjectUrl = (
   fileName: string,
   { size = 'original' }: { size?: SizeName },
@@ -291,4 +447,13 @@ export const getObjectUrl = (
     Key: fileNameWithSize,
     Expires: 60 * 24 * 7,
   })
+}
+
+export const getPublicUrl = (
+  fileName: string,
+  { size = 'original' }: { size?: SizeName } = {},
+) => {
+  const fileNameWithSize = generateFileNameWithSize(fileName, size)
+
+  return `https://${Bucket}.s3.${Region}.amazonaws.com/${fileNameWithSize}`
 }

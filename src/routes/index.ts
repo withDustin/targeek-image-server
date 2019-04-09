@@ -1,42 +1,20 @@
 import express from 'express'
-import ExpressRedisCache from 'express-redis-cache'
-import fileType from 'file-type'
-import { getObjectUrl, readFileBuffer } from 'functions/files'
-import { processImage } from 'functions/images'
+import {
+  FILE_LOCATIONS,
+  generateFileNameWithSize,
+  getFileLocation,
+  getPublicUrl,
+} from 'functions/files'
 import {
   filesProcessing,
   multer,
   renameFilesToChecksum,
 } from 'middlewares/files'
-import path from 'path'
-import redis from 'redis'
 import logger from 'utils/logger'
 
 const router = express.Router()
 
-const redisClient = redis.createClient({ url: process.env.REDIS_URI })
-
-const DEFAULT_TTL = +(process.env.CACHE_TTL || 60)
-
-const cache = ExpressRedisCache({
-  client: redisClient,
-  prefix: 'file',
-  expire: DEFAULT_TTL, // 1 min,
-})
-
-cache.on('message', message => logger.verbose('Cached %s', message))
-cache.on('connected', () => logger.verbose('Cache redis server connected'))
-cache.on('disconnected', () => logger.verbose('Cache redis server connected'))
-cache.on('error', error => logger.error('Cache redis server error %o', error))
-cache.on('deprecated', deprecated =>
-  logger.warning('deprecated warning', {
-    type: deprecated.type,
-    name: deprecated.name,
-    substitute: deprecated.substitute,
-    file: deprecated.file,
-    line: deprecated.line,
-  }),
-)
+const DEFAULT_IMAGE_NAME = '8acd942c9940ce0a7df1a8e15d4bad81'
 
 router.put(
   '/images',
@@ -49,73 +27,30 @@ router.put(
   },
 )
 
-router.get(
-  '/:fileName',
-  (req, res, next) => {
-    const { cache: enableCache = 'true' } = req.query
+router.get('/:fileName', async (req, res, next) => {
+  const fileName: string = req.params.fileName
 
-    if (
-      enableCache === 'false' ||
-      process.env.DISABLE_EXPRESS_CACHING === 'true'
-    ) {
-      return next()
-    }
+  logger.verbose('Getting file %s', fileName)
 
-    // const imageFormat = req.query.format || 'webp'
+  const fileNameWithSize = generateFileNameWithSize(
+    fileName,
+    req.query && req.query.size,
+  )
 
-    res.express_redis_cache_name = `${req.originalUrl}`
-    return cache.route({
-      binary: true,
-      expire: {
-        200: DEFAULT_TTL,
-        404: 15,
-        xxx: 1,
-      },
-    })(req, res, next)
-  },
-  async (req, res, next) => {
-    const fileName: string = req.params.fileName
-    // const imageFormat = req.query.format
+  const location = await getFileLocation(fileNameWithSize)
 
-    logger.verbose('Getting file %s', fileName)
-
-    res.redirect(getObjectUrl(fileName, req.query), 301)
-
-    // try {
-    //   const fileBuffer = await readFileBuffer(fileName)
-
-    //   if (!fileBuffer) {
-    //     return res
-    //       .header('Cache-Control', 'private')
-    //       .status(404)
-    //       .sendFile(path.resolve(__dirname, '../../static/empty.webp'))
-    //   }
-
-    //   const optimizedFileBuffer = fileType(fileBuffer).mime.startsWith('image/')
-    //     ? await (await processImage(
-    //         fileBuffer,
-    //         req.query,
-    //         imageFormat === 'jpeg' ? 'jpeg' : 'webp',
-    //       )).toBuffer()
-    //     : fileBuffer
-
-    //   logger.verbose(
-    //     'Downloaded file %s %s',
-    //     fileName,
-    //     fileType(fileBuffer).mime,
-    //   )
-
-    //   logger.info(getObjectUrl(fileName))
-
-    //   res
+  switch (location) {
+    // case FILE_LOCATIONS.LOCAL:
+    //   return res
     //     .header('Cache-Control', 'public, max-age=31536000')
-    //     .contentType(fileType(optimizedFileBuffer).mime)
-    //     .send(optimizedFileBuffer)
-    // } catch (err) {
-    //   logger.error(err)
-    //   throw err
-    // }
-  },
-)
+    //     .sendFile(getFilePath(fileNameWithSize))
+
+    case FILE_LOCATIONS.S3:
+      return res.redirect(301, getPublicUrl(fileName, req.query))
+
+    default:
+      return res.redirect(301, getPublicUrl(DEFAULT_IMAGE_NAME))
+  }
+})
 
 export default router
