@@ -3,7 +3,7 @@ import {
   FILE_LOCATIONS,
   generateFileNameWithSize,
   getFileLocation,
-  getPublicUrl,
+  getObjectPublicUrl,
 } from 'functions/files'
 import {
   filesProcessing,
@@ -41,10 +41,10 @@ router.get('/:fileName', async (req, res, next) => {
 
   switch (location) {
     case FILE_LOCATIONS.S3:
-      return res.redirect(301, getPublicUrl(fileName, req.query))
+      return res.redirect(301, getObjectPublicUrl(fileName, req.query))
 
     default:
-      return res.redirect(301, getPublicUrl(DEFAULT_IMAGE_NAME))
+      return res.redirect(301, getObjectPublicUrl(DEFAULT_IMAGE_NAME))
   }
 })
 
