@@ -315,7 +315,7 @@ export const reUploadImageToS3AndRemove = async (startAt: number = 0) => {
 }
 
 /**
- * flow this document https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property
+ * @see https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#listObjects-property
  * @param limit Sets the maximum number of keys returned in the response. The response might contain fewer keys but will never contain more.
  * @param marker Specifies the key to start with when listing objects in a bucket.
  */
