@@ -343,21 +343,18 @@ export const listAllObjects = async (
   marker?: string,
   prevObjects?: S3.Object[],
 ): Promise<S3.Object[]> => {
-  let objects: S3.Object[] = prevObjects
-  let count = startAt
-
   logger.verbose(
-    `[Get objects from ${count}000-${count + 1}000]: marker ${marker}`,
+    `[Get objects from ${startAt}000-${startAt + 1}000]: marker ${marker}`,
   )
   const response: S3.ListObjectsOutput = await listObjects({
     marker,
   })
 
-  objects = objects.concat(response.Contents)
+  const objects = prevObjects.concat(response.Contents)
 
   if (response.IsTruncated) {
     return await listAllObjects(
-      ++count,
+      startAt + 1,
       response.Contents.slice(-1)[0].Key,
       objects,
     )
@@ -379,12 +376,10 @@ export const putObjectACL = ({ key, acl }: { key: string; acl: ACL }) => {
 export const rePutAllErrorObjectsACL = async (
   prevObjects: S3.Object[],
 ): Promise<void> => {
-  let objects = prevObjects
+  logger.verbose(`[Re put error object ACL]: ${prevObjects.length} objects`)
 
-  logger.verbose(`[Re put error object ACL]: ${objects.length} objects`)
-
-  objects = (await Promise.all(
-    objects.map(async item => {
+  const objects = (await Promise.all(
+    prevObjects.map(async item => {
       try {
         await putObjectACL({ key: item.Key, acl: 'public-read' })
         return null
@@ -407,11 +402,10 @@ export const rePutAllObjectsACL = async (
   marker?: string,
   prevErrorObjects?: S3.Object[],
 ): Promise<void> => {
-  let count = startAt
   let errorObjects: S3.Object[] = prevErrorObjects
 
   logger.verbose(
-    `[Put object ACL from ${count}000-${count + 1}000]: marker ${marker}`,
+    `[Put object ACL from ${startAt}000-${startAt + 1}000]: marker ${marker}`,
   )
 
   const response: S3.ListObjectsOutput = await listObjects({
@@ -431,7 +425,7 @@ export const rePutAllObjectsACL = async (
 
   if (response.IsTruncated) {
     return await rePutAllObjectsACL(
-      ++count,
+      startAt + 1,
       response.Contents.slice(-1)[0].Key,
       errorObjects,
     )
