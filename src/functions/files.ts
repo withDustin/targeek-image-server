@@ -323,7 +323,9 @@ export const listObjects = ({
   limit,
   marker,
 }: {
+  /** Sets the maximum number of keys returned in the response. The response might contain fewer keys but will never contain more. */
   limit?: number
+  /** Specifies the key to start with when listing objects in a bucket. */
   marker?: string
 } = {}) => {
   return s3
