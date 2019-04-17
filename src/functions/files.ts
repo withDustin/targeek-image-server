@@ -199,7 +199,7 @@ export const resizeImage = (fileName: string, buffer: Buffer) => {
         .resize(size.maxWidth, null, {
           withoutEnlargement: true,
         })
-        .jpeg()
+        .png()
         .toBuffer()
 
       const filePath = path.resolve(
