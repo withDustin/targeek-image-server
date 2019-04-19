@@ -43,7 +43,7 @@
     "@types/sharp": "0.22.1",
     "dotenv": "6.2.0",
     "prettier": "1.16.4",
-    "ts-node": "8.0.3",
+    "ts-node": "8.1.0",
     "ts-node-dev": "1.0.0-pre.32",
     "tsconfig-paths": "3.8.0",
     "tslint": "5.13.1",
