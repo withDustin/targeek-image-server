@@ -79,10 +79,10 @@
   resolved "https://registry.yarnpkg.com/@types/json5/-/json5-0.0.29.tgz#ee28707ae94e11d2b827bcbe5270bcea7f3e71ee"
   integrity sha1-7ihweulOEdK4J7y+UnC86n8+ce4=
 
-"@types/md5-file@4.0.0":
-  version "4.0.0"
-  resolved "https://registry.yarnpkg.com/@types/md5-file/-/md5-file-4.0.0.tgz#01c986144648a757ac6e7ada665fa665c253289d"
-  integrity sha512-t+qg7R25oYo6z3iWI+9CRky2mgQ51RGvLqlCPV+xa6dKp0YDomv0TArLK/CdcReFZwQHn/YMNRZx+4AUWXPtlg==
+"@types/md5-file@4.0.2":
+  version "4.0.2"
+  resolved "https://registry.yarnpkg.com/@types/md5-file/-/md5-file-4.0.2.tgz#c7241e88f4aa17218c774befb0fc34f33f21fe36"
+  integrity sha512-8gacRfEqLrmZ6KofpFfxyjsm/LYepeWUWUJGaf5A9W9J5B2/dRZMdkDqFDL6YDa9IweH12IO76jO7mpsK2B3wg==
 
 "@types/method-override@0.0.31":
   version "0.0.31"
