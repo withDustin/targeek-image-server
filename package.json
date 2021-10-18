@@ -44,7 +44,7 @@
     "dotenv": "6.2.0",
     "prettier": "1.16.4",
     "ts-node": "8.1.0",
-    "ts-node-dev": "1.0.0-pre.32",
+    "ts-node-dev": "1.1.8",
     "tsconfig-paths": "3.8.0",
     "tslint": "5.13.1",
     "tslint-config-prettier": "1.18.0"
