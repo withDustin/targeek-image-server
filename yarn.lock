@@ -36,19 +36,13 @@
   dependencies:
     "@types/express" "*"
 
-"@types/events@*":
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/@types/events/-/events-3.0.0.tgz#2862f3f58a9a7f7c3e78d79f130dd4d71c25c2a7"
-  integrity sha512-EaObqwIvayI5a8dCzhFrjKzVwKLxjoG9T6Ppd5CEo07LRKfQ8Yokw54r5+Wq7FaBQ+yXRvQAYPrHwya1/UFt9g==
-
-"@types/express-redis-cache@1.1.0":
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/@types/express-redis-cache/-/express-redis-cache-1.1.0.tgz#b0b0742c56c1de2672ad6873e8074a6c930afe0d"
-  integrity sha512-t9LUb5xd1EpdoyMIBk6IPgvWWIqRnGOpO9NS9qVyBHdhqRjEzSj4Z9hdrOUAkMFpG1mCOxjhPmS5zOuqUsNuhQ==
+"@types/express-redis-cache@1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@types/express-redis-cache/-/express-redis-cache-1.1.2.tgz#416f102e40fd6fc7ea31c0d61454385cb247ff0d"
+  integrity sha512-bQhd8O5wnxKETo23iRYxYG65yEeQ5ZqfHbYmwIbRtMKRjwZhZMKAvnFVSQTJTUypTPlh0uOF7FblvhMQ1NC1LQ==
   dependencies:
-    "@types/events" "*"
     "@types/express" "*"
-    "@types/redis" "*"
+    "@types/redis" "^2.8.0"
 
 "@types/express-serve-static-core@*":
   version "4.16.1"
@@ -118,17 +112,17 @@
   resolved "https://registry.yarnpkg.com/@types/range-parser/-/range-parser-1.2.3.tgz#7ee330ba7caafb98090bece86a5ee44115904c2c"
   integrity sha512-ewFXqrQHlFsgc09MK5jP5iR7vumV/BYayNC6PgJO2LPe8vrnNFyjQjSppfEngITi0qvfKtzFvgKymGheFM9UOA==
 
-"@types/redis@*":
-  version "2.8.11"
-  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.11.tgz#103b6b165edf037dd9f50216690cf8e0045f076d"
-  integrity sha512-i0AqDzjX0FlO+npqkhl1etZw1fGnJc0IeHUHKAf/V7Drk+rDJI634GE9Lwh8aj/2ahuW6jHdWX4ZnyNofWXKrw==
-  dependencies:
-    "@types/node" "*"
-
 "@types/redis@2.8.12":
   version "2.8.12"
   resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.12.tgz#6405d7ece0d6cc037151b7141cef9ad3cd06f3ac"
   integrity sha512-eT5cGYr08OnF6OlAHdc2hVOBAKBpfQQNQHsWEvUwRPFiXRd+vv+hOHSSIo4xB7M5vZOZdjMT2OUlXYqo3YlIGQ==
+  dependencies:
+    "@types/node" "*"
+
+"@types/redis@^2.8.0":
+  version "2.8.32"
+  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.32.tgz#1d3430219afbee10f8cfa389dad2571a05ecfb11"
+  integrity sha512-7jkMKxcGq9p242exlbsVzuJb57KqHRhNl4dHoQu2Y5v9bCAbtIXXH0R3HleSQW4CTOqpHIYUW3t6tpUj4BVQ+w==
   dependencies:
     "@types/node" "*"
 
