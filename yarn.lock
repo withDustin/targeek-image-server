@@ -15,12 +15,13 @@
     "@types/connect" "*"
     "@types/node" "*"
 
-"@types/bull@3.5.11":
-  version "3.5.11"
-  resolved "https://registry.yarnpkg.com/@types/bull/-/bull-3.5.11.tgz#baa1d6752e926e549190647a541056df1cc086b7"
-  integrity sha512-cP464wO4pQnvJsYTIwcSitdEv5aXaMsRoP07raOgOSlJDnaDYmV6jMf1Vk1dWhtfJ0FRtjpXeHaYMc/j8bwb4A==
+"@types/bull@3.15.9":
+  version "3.15.9"
+  resolved "https://registry.yarnpkg.com/@types/bull/-/bull-3.15.9.tgz#e10e0901ec3762bff85716b3c580277960751c93"
+  integrity sha512-MPUcyPPQauAmynoO3ezHAmCOhbB0pWmYyijr/5ctaCqhbKWsjW0YCod38ZcLzUBprosfZ9dPqfYIcfdKjk7RNQ==
   dependencies:
     "@types/ioredis" "*"
+    "@types/redis" "^2.8.0"
 
 "@types/connect@*":
   version "3.4.32"
@@ -129,6 +130,13 @@
   version "2.8.12"
   resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.12.tgz#6405d7ece0d6cc037151b7141cef9ad3cd06f3ac"
   integrity sha512-eT5cGYr08OnF6OlAHdc2hVOBAKBpfQQNQHsWEvUwRPFiXRd+vv+hOHSSIo4xB7M5vZOZdjMT2OUlXYqo3YlIGQ==
+  dependencies:
+    "@types/node" "*"
+
+"@types/redis@^2.8.0":
+  version "2.8.32"
+  resolved "https://registry.yarnpkg.com/@types/redis/-/redis-2.8.32.tgz#1d3430219afbee10f8cfa389dad2571a05ecfb11"
+  integrity sha512-7jkMKxcGq9p242exlbsVzuJb57KqHRhNl4dHoQu2Y5v9bCAbtIXXH0R3HleSQW4CTOqpHIYUW3t6tpUj4BVQ+w==
   dependencies:
     "@types/node" "*"
 
